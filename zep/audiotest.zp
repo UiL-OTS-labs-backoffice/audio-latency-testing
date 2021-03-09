@@ -1,0 +1,87 @@
+plugin zep_iospp;
+plugin zep_sound;
+
+import sound_settings;
+
+
+SoundPlaybackDevice sound_output_device
+{
+    init()
+    {
+        open(PLAYBACK_NUM_CHANNELS, PLAYBACK_SAMPLE_RATE, 10, PLAYBACK_LATENCY);
+        if (error()) terminate;
+    }
+}
+
+SoundPlayback test_sound
+{
+    // Sound source/producer object.
+    SoundFile clip {}
+    
+    int count;
+
+    //==========================================================================
+    
+    on_event:init() 
+    {
+        count = 0;
+    }
+
+    on_event:finish()
+    {
+        if(count > 2)
+        {
+            
+            terminate;
+        }
+            
+        count = count + 1;
+        action(event_time + 1s);
+    }
+
+    // Starts a trial.
+    void action(time t)
+    {
+        device = sound_output_device;
+        clip.file = stimuli_dir() + "sounds/untitled.wav";
+        
+        //time t = now() + 1000ms;
+        
+        start(t);
+        parallel.start_data(0xFF, 0x0, expected_start_time, 2ms);
+        //parallel.start_data(0xFF, expected_start_time);
+        //parallel.start_data(0x0, expected_finish_time);
+    }
+}
+
+
+SPP parallel
+{
+    init()
+    {
+        // Update interval must be set prior to monitoring the SPP.
+        spp_set_update_interval(1ms);
+        
+        data_is_output = true;
+
+        open(0);
+        if (error()) terminate;
+
+        status_event_mask = SPP_STATUS_MASK;
+        data_event_mask = SPP_DATA_MASK;
+    }
+
+
+    cleanup()
+    {
+        close();
+    }
+}
+
+
+start()
+{
+    parallel.write_data(0x0);
+    println("Starting test");
+    test_sound.action(event_time + 1s);
+}
