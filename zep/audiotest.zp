@@ -6,10 +6,11 @@ import sound_settings;
 
 SoundPlaybackDevice sound_output_device
 {
-    init()
+    void open_device(int audio_device)
     {
-        open(PLAYBACK_NUM_CHANNELS, PLAYBACK_SAMPLE_RATE, 10, PLAYBACK_LATENCY);
-        if (error()) terminate;
+        open(PLAYBACK_NUM_CHANNELS, PLAYBACK_SAMPLE_RATE, audio_device, PLAYBACK_LATENCY);
+        if (error())
+            raise_fatal_error("Audio device could not be opened");
     }
 }
 
@@ -82,6 +83,21 @@ SPP parallel
 start()
 {
     parallel.write_data(0x0);
+
+    int audio_device = -1;
+
+    if (num_arguments() != 1)
+    {
+        println("No audio device provided, falling back to default");
+    }
+    else
+    {
+        audio_device = int(argument(0));
+        println("Using device " + audio_device);
+    }
+
+    sound_output_device.open_device(audio_device);
+
     println("Starting test");
     test_sound.action(event_time + 1s);
 }
