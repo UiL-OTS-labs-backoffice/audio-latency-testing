@@ -8,9 +8,12 @@ SoundPlaybackDevice sound_output_device
 {
     void open_device(int audio_device)
     {
+	println("Configured software latency: " + PLAYBACK_LATENCY);
         open(PLAYBACK_NUM_CHANNELS, PLAYBACK_SAMPLE_RATE, audio_device, PLAYBACK_LATENCY);
         if (error())
             raise_fatal_error("Audio device could not be opened");
+        println("Used software latency: " + software_latency);
+        println("Used hardware latency: " + hardware_latency);
     }
 }
 
